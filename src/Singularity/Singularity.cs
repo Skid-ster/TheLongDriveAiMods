@@ -15,7 +15,9 @@ namespace Singularity
         public override string Version => "1.0.0";
         public override bool LoadInDB => true;
 
+        [Obsolete("Legacy TLDLoader hook; use DbLoad instead.")]
         public override void dbLoad() { RegisterDonor(); }
+        public override void DbLoad() { RegisterDonor(); }
         public override void OnLoad()
         {
             if (patches == null)
