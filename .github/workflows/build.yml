@@ -1,0 +1,31 @@
+name: Build Car05EngineVariants
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore .NET Framework 4.8 reference assemblies
+        run: dotnet restore src/Car05EngineVariants/Car05EngineVariants.csproj
+
+      - name: Build mod
+        run: dotnet build src/Car05EngineVariants/Car05EngineVariants.csproj -c Release
+
+      - name: Upload compiled DLL
+        uses: actions/upload-artifact@v3
+        with:
+          name: Car05EngineVariants-DLL
+          path: src/Car05EngineVariants/bin/Release/net48/Car05EngineVariants.dll
