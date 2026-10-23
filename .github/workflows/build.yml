@@ -1,4 +1,4 @@
-name: Build Lada Restomod
+name: Build Car 04 Race Restomod
 
 on:
   push:
@@ -21,14 +21,14 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Build mod
-        run: dotnet build src/LadaRestomod/LadaRestomod.csproj --configuration Release
+        run: dotnet build src/Car04RaceRestomod/Car04RaceRestomod.csproj --configuration Release
 
       - name: Place DLL in mods folder
         shell: pwsh
         run: |
-          $destination = "mods/Lada Restomod"
+          $destination = "mods/Car 04 Race Restomod"
           New-Item -ItemType Directory -Force -Path $destination | Out-Null
-          Copy-Item "src/LadaRestomod/bin/Release/net48/M_LadaRestomod.dll" "$destination/M_LadaRestomod.dll" -Force
+          Copy-Item "src/Car04RaceRestomod/bin/Release/net48/M_Car04RaceRestomod.dll" "$destination/M_Car04RaceRestomod.dll" -Force
 
       - name: Commit built DLL to this branch
         if: github.event_name == 'push'
@@ -36,15 +36,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- "mods/Lada Restomod/M_LadaRestomod.dll"
+          git add -- "mods/Car 04 Race Restomod/M_Car04RaceRestomod.dll"
           if ! git diff --cached --quiet; then
-            git commit -m "Update Lada Restomod DLL [skip ci]"
+            git commit -m "Update Car 04 Race Restomod DLL [skip ci]"
             git push
           fi
 
       - name: Upload compiled mod
         uses: actions/upload-artifact@v7
         with:
-          name: LadaRestomod
+          name: Car04RaceRestomod
           path: mods/
           if-no-files-found: error

@@ -5,15 +5,15 @@ using HarmonyLib;
 using TLDLoader;
 using UnityEngine;
 
-namespace LadaRestomod
+namespace Car04RaceRestomod
 {
-    public sealed class LadaRestomod : Mod
+    public sealed class Car04RaceRestomod : Mod
     {
-        private const string ModId = "arena.lada-restomod";
+        private const string ModId = "arena.car04-race-restomod";
         private static Harmony _harmony;
 
         public override string ID { get { return ModId; } }
-        public override string Name { get { return "Lada Restomod"; } }
+        public override string Name { get { return "Car 04 Race Restomod"; } }
         public override string Author { get { return "Arena TLD Mod Factory"; } }
         public override string Version { get { return "1.0.0"; } }
         public override bool LoadInDB { get { return true; } }
@@ -21,21 +21,21 @@ namespace LadaRestomod
         [Obsolete("Required by TLDLoader for database prefab registration.")]
         public override void dbLoad()
         {
-            GameObject donor = LadaDonor.FindPrefab();
+            GameObject donor = Car04Donor.FindPrefab();
             if (donor == null)
             {
-                Debug.LogError("[Lada Restomod] Could not find a Lada car prefab. No donor was modified.");
+                Debug.LogError("[Car 04 Race Restomod] itemdatabase.d.gcar04 is missing or has no carscript. No donor was modified.");
                 return;
             }
 
-            donor.name = "Lada Restomod";
-            if (donor.GetComponent<LadaRestomodInitializer>() == null)
+            donor.name = "Car 04 Race Restomod";
+            if (donor.GetComponent<Car04RaceRestomodInitializer>() == null)
             {
-                donor.AddComponent<LadaRestomodInitializer>();
+                donor.AddComponent<Car04RaceRestomodInitializer>();
             }
 
             AddDonorToItemDatabase(donor);
-            Debug.Log("[Lada Restomod] Registered the Lada sleeper donor: " + donor.name);
+            Debug.Log("[Car 04 Race Restomod] Registered the car04 race donor: " + donor.name);
         }
 
         public override void OnLoad()
@@ -47,6 +47,22 @@ namespace LadaRestomod
 
             _harmony = new Harmony(ModId);
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
+        }
+
+        public override void OnGUI()
+        {
+            if (mainscript.M == null || mainscript.M.player == null)
+            {
+                return;
+            }
+
+            carscript car = mainscript.M.player.Car;
+            if (car == null || car.GetComponent<Car04RaceRestomodInitializer>() == null)
+            {
+                return;
+            }
+
+            Car04LiveHud.Draw(car);
         }
 
         private static void AddDonorToItemDatabase(GameObject donor)
@@ -78,10 +94,8 @@ namespace LadaRestomod
         }
     }
 
-    internal static class LadaDonor
+    internal static class Car04Donor
     {
-        private const BindingFlags InstanceFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-
         internal static GameObject FindPrefab()
         {
             itemdatabase database = itemdatabase.d;
@@ -90,70 +104,12 @@ namespace LadaRestomod
                 return null;
             }
 
-            GameObject[] items = database.items;
-            if (items != null)
-            {
-                for (int i = 0; i < items.Length; i++)
-                {
-                    GameObject candidate = items[i];
-                    if (IsCar(candidate) && candidate.name.IndexOf("lada", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        return candidate;
-                    }
-                }
-            }
-
-            FieldInfo[] fields = typeof(itemdatabase).GetFields(InstanceFields);
-            for (int i = 0; i < fields.Length; i++)
-            {
-                if (fields[i].FieldType != typeof(GameObject))
-                {
-                    continue;
-                }
-
-                GameObject candidate = fields[i].GetValue(database) as GameObject;
-                if (IsCar(candidate) &&
-                    (fields[i].Name.IndexOf("lada", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                     candidate.name.IndexOf("lada", StringComparison.OrdinalIgnoreCase) >= 0))
-                {
-                    return candidate;
-                }
-            }
-
-            GameObject fallback = GetCarField(database, "gcar06");
-            if (fallback != null)
-            {
-                return fallback;
-            }
-
-            fallback = GetCarField(database, "gcar05");
-            if (fallback != null)
-            {
-                return fallback;
-            }
-
-            return null;
-        }
-
-        private static GameObject GetCarField(itemdatabase database, string fieldName)
-        {
-            FieldInfo field = typeof(itemdatabase).GetField(fieldName, InstanceFields);
-            if (field == null || field.FieldType != typeof(GameObject))
-            {
-                return null;
-            }
-
-            GameObject candidate = field.GetValue(database) as GameObject;
-            return IsCar(candidate) ? candidate : null;
-        }
-
-        private static bool IsCar(GameObject candidate)
-        {
-            return candidate != null && candidate.GetComponent<carscript>() != null;
+            GameObject candidate = database.gcar04;
+            return candidate != null && candidate.GetComponent<carscript>() != null ? candidate : null;
         }
     }
 
-    public sealed class LadaRestomodInitializer : MonoBehaviour
+    public sealed class Car04RaceRestomodInitializer : MonoBehaviour
     {
         private void Awake()
         {
@@ -161,6 +117,8 @@ namespace LadaRestomod
             {
                 return;
             }
+
+            ApplyRaceLivery();
 
             enginescript[] engines = GetComponentsInChildren<enginescript>(true);
             for (int i = 0; i < engines.Length; i++)
@@ -171,18 +129,88 @@ namespace LadaRestomod
                     continue;
                 }
 
-                LadaRestomodEngine core = engine.GetComponent<LadaRestomodEngine>();
+                Car04RaceRestomodEngine core = engine.GetComponent<Car04RaceRestomodEngine>();
                 if (core == null)
                 {
-                    core = engine.gameObject.AddComponent<LadaRestomodEngine>();
+                    core = engine.gameObject.AddComponent<Car04RaceRestomodEngine>();
                 }
 
                 core.Initialize();
             }
         }
+
+        private void ApplyRaceLivery()
+        {
+            Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+            for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
+            {
+                Renderer targetRenderer = renderers[rendererIndex];
+                if (targetRenderer == null)
+                {
+                    continue;
+                }
+
+                string objectName = targetRenderer.gameObject.name.ToLowerInvariant();
+                Material[] materials = targetRenderer.materials;
+                for (int materialIndex = 0; materialIndex < materials.Length; materialIndex++)
+                {
+                    Material material = materials[materialIndex];
+                    if (material == null || !material.HasProperty("_Color"))
+                    {
+                        continue;
+                    }
+
+                    string materialName = material.name.ToLowerInvariant();
+                    string combinedName = objectName + " " + materialName;
+                    if (ContainsAny(combinedName, ExcludedLiveryParts))
+                    {
+                        continue;
+                    }
+
+                    bool accentPart = ContainsAny(combinedName, AccentLiveryParts);
+                    if (material.color.a < 0.9f)
+                    {
+                        continue;
+                    }
+
+                    material.color = accentPart ? RaceAccent : RaceBlue;
+                    if (accentPart && material.HasProperty("_EmissionColor"))
+                    {
+                        material.EnableKeyword("_EMISSION");
+                        material.SetColor("_EmissionColor", RaceAccent * 0.12f);
+                    }
+                }
+            }
+        }
+
+        private static bool ContainsAny(string value, string[] terms)
+        {
+            for (int i = 0; i < terms.Length; i++)
+            {
+                if (value.Contains(terms[i]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static readonly Color RaceBlue = new Color(0.025f, 0.34f, 0.98f, 1f);
+        private static readonly Color RaceAccent = new Color(1f, 0.19f, 0.025f, 1f);
+        private static readonly string[] ExcludedLiveryParts = new string[]
+        {
+            "glass", "window", "windshield", "windscreen", "tire", "tyre", "wheel", "rim",
+            "seat", "interior", "dashboard", "steering", "light", "lamp", "mirror", "gauge",
+            "engine", "exhaust", "chrome", "license", "licence", "plate", "rubber"
+        };
+        private static readonly string[] AccentLiveryParts = new string[]
+        {
+            "stripe", "spoiler", "bumper", "grille", "trim", "number", "raceaccent"
+        };
     }
 
-    public sealed class LadaRestomodEngine : MonoBehaviour
+    public sealed class Car04RaceRestomodEngine : MonoBehaviour
     {
         private bool _initialized;
         private RestomodAudioLayer _audioLayer;
@@ -201,8 +229,8 @@ namespace LadaRestomod
                 ApplyAwakeScale();
             }
 
-            LadaEngineRuntime.Register(engine);
-            LadaEngineRuntime.ApplySleeperTune(engine);
+            Car04EngineRuntime.Register(engine);
+            Car04EngineRuntime.ApplySleeperTune(engine);
 
             _audioLayer = GetComponent<RestomodAudioLayer>();
             if (_audioLayer == null)
@@ -222,7 +250,7 @@ namespace LadaRestomod
             enginescript engine = GetComponent<enginescript>();
             if (engine != null)
             {
-                LadaEngineRuntime.Unregister(engine);
+                Car04EngineRuntime.Unregister(engine);
             }
         }
 
@@ -252,7 +280,7 @@ namespace LadaRestomod
         internal static readonly FieldInfo MaxRpm = typeof(enginescript).GetField("maxRpm", InstanceFields);
     }
 
-    internal static class LadaEngineRuntime
+    internal static class Car04EngineRuntime
     {
         private static readonly HashSet<enginescript> ManagedEngines = new HashSet<enginescript>();
         private static readonly Dictionary<enginescript, float> NextFluidRefresh = new Dictionary<enginescript, float>();
@@ -530,9 +558,9 @@ namespace LadaRestomod
 
             const int sampleRate = 22050;
             const int sampleCount = sampleRate * 2;
-            _subBassClip = CreateTone("Lada Restomod Sub Bass", sampleRate, sampleCount, 43f, 0.65f, false);
-            _growlClip = CreateTone("Lada Restomod Growl", sampleRate, sampleCount, 68f, 0.60f, false);
-            _turboClip = CreateTone("Lada Restomod Turbo", sampleRate, sampleCount, 190f, 0.28f, true);
+            _subBassClip = CreateTone("Car 04 Race Restomod Sub Bass", sampleRate, sampleCount, 43f, 0.65f, false);
+            _growlClip = CreateTone("Car 04 Race Restomod Growl", sampleRate, sampleCount, 68f, 0.60f, false);
+            _turboClip = CreateTone("Car 04 Race Restomod Turbo", sampleRate, sampleCount, 190f, 0.28f, true);
         }
 
         private static AudioClip CreateTone(string clipName, int sampleRate, int sampleCount, float baseFrequency, float amplitude, bool airy)
@@ -556,17 +584,96 @@ namespace LadaRestomod
         }
     }
 
+    internal static class Car04LiveHud
+    {
+        private static readonly object[] GuiArguments = new object[2];
+        private static MethodInfo _boxMethod;
+        private static bool _lookupComplete;
+
+        internal static void Draw(carscript car)
+        {
+            if (!_lookupComplete)
+            {
+                FindBoxMethod();
+            }
+
+            if (_boxMethod == null || car == null)
+            {
+                return;
+            }
+
+            enginescript engine = car.Engine;
+            float rpm = engine == null ? 0f : Mathf.Max(engine.rpm, 0f);
+            float maxRpm = engine == null ? 0f : Mathf.Max(engine.maxRpm, 0f);
+            float fuel = GetTankPercent(car.Tank);
+            float oil = engine == null ? 0f : GetTankPercent(engine.T);
+            float speed = Mathf.Max(car.speed, 0f);
+            string gear = car.gear.ToString();
+            string content = "CAR 04  /  RACE TELEMETRY\n" +
+                "SPEED  " + speed.ToString("0") + " km/h     GEAR  " + gear + "\n" +
+                "RPM    " + rpm.ToString("0") + " / " + maxRpm.ToString("0") + "\n" +
+                "BOOST  " + MakeBar(maxRpm > 0f ? rpm / maxRpm : 0f) + "\n" +
+                "FUEL   " + MakeBar(fuel) + "  " + (fuel * 100f).ToString("0") + "%\n" +
+                "OIL    " + MakeBar(oil) + "  " + (oil * 100f).ToString("0") + "%";
+
+            GuiArguments[0] = new Rect(Screen.width - 310f, Screen.height - 188f, 290f, 160f);
+            GuiArguments[1] = content;
+            _boxMethod.Invoke(null, GuiArguments);
+        }
+
+        private static float GetTankPercent(tankscript tank)
+        {
+            if (tank == null || tank.F == null || tank.F.maxC <= 0f)
+            {
+                return 0f;
+            }
+
+            return Mathf.Clamp01(tank.F.GetAmount() / tank.F.maxC);
+        }
+
+        private static string MakeBar(float value)
+        {
+            int filled = Mathf.RoundToInt(Mathf.Clamp01(value) * 10f);
+            return "[" + new string('#', filled) + new string('-', 10 - filled) + "]";
+        }
+
+        private static void FindBoxMethod()
+        {
+            _lookupComplete = true;
+            Type guiType = Type.GetType("UnityEngine.GUI, UnityEngine.IMGUIModule", false) ??
+                           Type.GetType("UnityEngine.GUI, UnityEngine", false);
+            if (guiType == null)
+            {
+                Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                for (int i = 0; i < assemblies.Length && guiType == null; i++)
+                {
+                    guiType = assemblies[i].GetType("UnityEngine.GUI", false);
+                }
+            }
+
+            if (guiType != null)
+            {
+                _boxMethod = guiType.GetMethod(
+                    "Box",
+                    BindingFlags.Public | BindingFlags.Static,
+                    null,
+                    new Type[] { typeof(Rect), typeof(string) },
+                    null);
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(enginescript), "Update")]
     internal static class EngineUpdateHarmonyPatch
     {
         private static void Prefix(enginescript __instance)
         {
-            LadaEngineRuntime.BeforeUpdate(__instance);
+            Car04EngineRuntime.BeforeUpdate(__instance);
         }
 
         private static void Postfix(enginescript __instance)
         {
-            LadaEngineRuntime.AfterUpdate(__instance);
+            Car04EngineRuntime.AfterUpdate(__instance);
         }
     }
 
@@ -575,7 +682,7 @@ namespace LadaRestomod
     {
         private static bool Prefix(enginescript __instance)
         {
-            return LadaEngineRuntime.BeforeRunning(__instance);
+            return Car04EngineRuntime.BeforeRunning(__instance);
         }
     }
 }

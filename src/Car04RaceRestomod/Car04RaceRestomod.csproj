@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <AssemblyName>M_$(MSBuildProjectName)</AssemblyName>
-    <RootNamespace>LadaRestomod</RootNamespace>
+    <RootNamespace>Car04RaceRestomod</RootNamespace>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
