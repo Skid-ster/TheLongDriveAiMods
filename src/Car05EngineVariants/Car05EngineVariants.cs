@@ -30,44 +30,12 @@ namespace Car05EngineVariants
         public override string Author => "TLD Mod Factory";
         public override string Version => "1.0.0";
         public override bool LoadInDB => true;
-        public override bool UseHarmony => true;
+        public override bool UseHarmony => false;
 
-        public override void HarmonyPatch()
-        {
-            EngineFields.Initialize();
-            ItemDatabaseFields.Initialize();
-
-            if (HarmonyInstance != null)
-                return;
-
-            HarmonyInstance = new Harmony("com." + ID.ToLowerInvariant());
-
-            HarmonyInstance.Patch(
-                EngineFields.UpdateMethod,
-                new HarmonyMethod(typeof(EngineUpdatePrefixPatch), "Prefix", new[] { typeof(enginescript) }),
-                new HarmonyMethod(typeof(EngineUpdatePostfixPatch), "Postfix", new[] { typeof(enginescript) }),
-                null,
-                null);
-
-            HarmonyInstance.Patch(
-                EngineFields.RunningMethod,
-                new HarmonyMethod(typeof(EngineRunningPatch), "Prefix", new[] { typeof(enginescript) }),
-                null,
-                null,
-                null);
-
-            HarmonyInstance.Patch(
-                ItemDatabaseFields.ItemInitMethod,
-                null,
-                new HarmonyMethod(typeof(ItemDatabaseRebuildPatch), "Postfix", new[] { typeof(itemdatabase) }),
-                null,
-                null);
-        }
-
+        [Obsolete("TLDLoader compatibility database-load entry point.", false)]
         public override void dbLoad()
         {
-            EngineFields.Initialize();
-            ItemDatabaseFields.Initialize();
+            InstallHarmonyPatches();
 
             itemdatabase database = itemdatabase.d;
             if (database == null)
@@ -120,7 +88,40 @@ namespace Car05EngineVariants
 
         public override void OnLoad()
         {
+            InstallHarmonyPatches();
             RestoreGasItemSlot(itemdatabase.d);
+        }
+
+        private void InstallHarmonyPatches()
+        {
+            EngineFields.Initialize();
+            ItemDatabaseFields.Initialize();
+
+            if (HarmonyInstance != null)
+                return;
+
+            HarmonyInstance = new Harmony("com." + ID.ToLowerInvariant());
+
+            HarmonyInstance.Patch(
+                EngineFields.UpdateMethod,
+                new HarmonyMethod(typeof(EngineUpdatePrefixPatch), "Prefix", new[] { typeof(enginescript) }),
+                new HarmonyMethod(typeof(EngineUpdatePostfixPatch), "Postfix", new[] { typeof(enginescript) }),
+                null,
+                null);
+
+            HarmonyInstance.Patch(
+                EngineFields.RunningMethod,
+                new HarmonyMethod(typeof(EngineRunningPatch), "Prefix", new[] { typeof(enginescript) }),
+                null,
+                null,
+                null);
+
+            HarmonyInstance.Patch(
+                ItemDatabaseFields.ItemInitMethod,
+                null,
+                new HarmonyMethod(typeof(ItemDatabaseRebuildPatch), "Postfix", new[] { typeof(itemdatabase) }),
+                null,
+                null);
         }
 
         internal static void RestoreGasItemSlot(itemdatabase database)
@@ -408,9 +409,9 @@ namespace Car05EngineVariants
             }
         }
 
-        internal static fluidenum FuelFor(EngineVariantKind kind)
+        internal static mainscript.fluidenum FuelFor(EngineVariantKind kind)
         {
-            return kind == EngineVariantKind.Gas ? fluidenum.gas : fluidenum.diesel;
+            return kind == EngineVariantKind.Gas ? mainscript.fluidenum.gas : mainscript.fluidenum.diesel;
         }
 
         internal static float PitchFor(EngineVariantKind kind)
@@ -594,15 +595,15 @@ namespace Car05EngineVariants
 
         private void ConfigureFuel(EngineVariantKind kind)
         {
-            _engine.Oilfluid = fluidenum.oil;
+            _engine.Oilfluid = mainscript.fluidenum.oil;
 
             if (_engine.FuelConsumption == null)
-                _engine.FuelConsumption = new fluidcontainer();
+                _engine.FuelConsumption = new mainscript.fluidcontainer();
             if (_engine.FuelConsumption.fluids == null)
-                _engine.FuelConsumption.fluids = new List<fluid>();
+                _engine.FuelConsumption.fluids = new List<mainscript.fluid>();
 
             _engine.FuelConsumption.fluids.Clear();
-            _engine.FuelConsumption.fluids.Add(new fluid(EngineVariantSettings.FuelFor(kind), 1.0f));
+            _engine.FuelConsumption.fluids.Add(new mainscript.fluid(EngineVariantSettings.FuelFor(kind), 1.0f));
         }
     }
 
@@ -632,7 +633,7 @@ namespace Car05EngineVariants
                 FillTank(fuelTank, EngineVariantSettings.FuelFor(marker.Kind));
 
             if (engine.T != null)
-                FillTank(engine.T, fluidenum.oil);
+                FillTank(engine.T, mainscript.fluidenum.oil);
         }
 
         internal static void ForceRunning(enginescript engine)
@@ -643,12 +644,12 @@ namespace Car05EngineVariants
             engine.ignition = true;
         }
 
-        private static void FillTank(tankscript tank, fluidenum fluidType)
+        private static void FillTank(tankscript tank, mainscript.fluidenum fluidType)
         {
             if (tank.F == null || tank.F.maxC <= 0.0f)
                 return;
             if (tank.F.fluids == null)
-                tank.F.fluids = new List<fluid>();
+                tank.F.fluids = new List<mainscript.fluid>();
 
             float missing = tank.F.maxC - tank.F.GetAmount();
             if (missing > 0.001f)
