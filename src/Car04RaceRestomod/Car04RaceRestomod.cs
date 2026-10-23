@@ -57,7 +57,7 @@ namespace Car04RaceRestomod
             }
 
             carscript car = mainscript.M.player.Car;
-            if (car == null || car.GetComponent<Car04RaceRestomodInitializer>() == null)
+            if (car == null || !Car04RaceRestomodInitializer.IsAttachedToCar(car))
             {
                 return;
             }
@@ -105,20 +105,36 @@ namespace Car04RaceRestomod
             }
 
             GameObject candidate = database.gcar04;
-            return candidate != null && candidate.GetComponent<carscript>() != null ? candidate : null;
+            return candidate != null && candidate.GetComponentInChildren<carscript>(true) != null ? candidate : null;
         }
     }
 
     public sealed class Car04RaceRestomodInitializer : MonoBehaviour
     {
+        private float _nextLiveryRefresh;
+        private float _liveryRefreshUntil;
+
+        internal static bool IsAttachedToCar(carscript car)
+        {
+            return car != null &&
+                   (car.GetComponentInParent<Car04RaceRestomodInitializer>() != null ||
+                    car.GetComponentInChildren<Car04RaceRestomodInitializer>(true) != null);
+        }
+
         private void Awake()
         {
-            if (GetComponent<carscript>() == null)
+            if (GetComponentInChildren<carscript>(true) == null)
             {
                 return;
             }
 
-            ApplyRaceLivery();
+            int paintedMaterials = ApplyRaceLivery();
+            if (paintedMaterials == 0)
+            {
+                Debug.LogWarning("[Car 04 Race Restomod] No body material color properties were found on car04; the race livery could not be applied.");
+            }
+            _nextLiveryRefresh = Time.time + 0.25f;
+            _liveryRefreshUntil = Time.time + 6f;
 
             enginescript[] engines = GetComponentsInChildren<enginescript>(true);
             for (int i = 0; i < engines.Length; i++)
@@ -139,8 +155,18 @@ namespace Car04RaceRestomod
             }
         }
 
-        private void ApplyRaceLivery()
+        private void LateUpdate()
         {
+            if (Time.time >= _nextLiveryRefresh && Time.time <= _liveryRefreshUntil)
+            {
+                ApplyRaceLivery();
+                _nextLiveryRefresh = Time.time + 0.25f;
+            }
+        }
+
+        private int ApplyRaceLivery()
+        {
+            int paintedMaterials = 0;
             Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
             for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
             {
@@ -155,7 +181,15 @@ namespace Car04RaceRestomod
                 for (int materialIndex = 0; materialIndex < materials.Length; materialIndex++)
                 {
                     Material material = materials[materialIndex];
-                    if (material == null || !material.HasProperty("_Color"))
+                    if (material == null)
+                    {
+                        continue;
+                    }
+
+                    bool hasColor = material.HasProperty("_Color") ||
+                                    material.HasProperty("_BaseColor") ||
+                                    material.HasProperty("_TintColor");
+                    if (!hasColor)
                     {
                         continue;
                     }
@@ -168,19 +202,38 @@ namespace Car04RaceRestomod
                     }
 
                     bool accentPart = ContainsAny(combinedName, AccentLiveryParts);
-                    if (material.color.a < 0.9f)
+                    Color originalColor = material.HasProperty("_Color") ? material.GetColor("_Color") :
+                                          material.HasProperty("_BaseColor") ? material.GetColor("_BaseColor") :
+                                          material.GetColor("_TintColor");
+                    if (originalColor.a < 0.9f)
                     {
                         continue;
                     }
 
-                    material.color = accentPart ? RaceAccent : RaceBlue;
+                    Color raceColor = accentPart ? RaceAccent : RaceBlue;
+                    if (material.HasProperty("_Color"))
+                    {
+                        material.SetColor("_Color", raceColor);
+                    }
+                    if (material.HasProperty("_BaseColor"))
+                    {
+                        material.SetColor("_BaseColor", raceColor);
+                    }
+                    if (material.HasProperty("_TintColor"))
+                    {
+                        material.SetColor("_TintColor", raceColor);
+                    }
+
                     if (accentPart && material.HasProperty("_EmissionColor"))
                     {
                         material.EnableKeyword("_EMISSION");
                         material.SetColor("_EmissionColor", RaceAccent * 0.12f);
                     }
+                    paintedMaterials++;
                 }
             }
+
+            return paintedMaterials;
         }
 
         private static bool ContainsAny(string value, string[] terms)
