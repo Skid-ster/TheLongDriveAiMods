@@ -21,7 +21,7 @@ jobs:
         run: dotnet build src/LadaRestomod/LadaRestomod.csproj --configuration Release
 
       - name: Upload compiled mod
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: LadaRestomod
           path: src/LadaRestomod/bin/Release/net48/M_LadaRestomod.dll
