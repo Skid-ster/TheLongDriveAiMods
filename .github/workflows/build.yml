@@ -1,0 +1,29 @@
+name: Build Singularity
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Verify game references
+        shell: pwsh
+        run: |
+          $names = 'Assembly-CSharp', 'UnityEngine', 'UnityEngine.CoreModule', 'UnityEngine.AudioModule', 'UnityEngine.PhysicsModule', 'TLDLoader', '0Harmony'
+          foreach ($name in $names) {
+            if (!(Test-Path "libs/$name.dll")) { throw "Missing libs/$name.dll" }
+          }
+      - name: Compile (warnings are errors)
+        run: dotnet build src/Singularity/Singularity.csproj --configuration Release --warnaserror
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Singularity
+          path: src/Singularity/bin/Release/net48/Singularity.dll
+          if-no-files-found: error
