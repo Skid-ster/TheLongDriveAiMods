@@ -10,10 +10,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
 
@@ -21,7 +21,7 @@ jobs:
         run: dotnet build src/LadaRestomod/LadaRestomod.csproj --configuration Release
 
       - name: Upload compiled mod
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: LadaRestomod
           path: src/LadaRestomod/bin/Release/net48/M_LadaRestomod.dll

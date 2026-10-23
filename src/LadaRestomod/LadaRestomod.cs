@@ -18,6 +18,7 @@ namespace LadaRestomod
         public override string Version { get { return "1.0.0"; } }
         public override bool LoadInDB { get { return true; } }
 
+        [Obsolete("Required by TLDLoader for database prefab registration.")]
         public override void dbLoad()
         {
             GameObject donor = LadaDonor.FindPrefab();
