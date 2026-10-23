@@ -1,4 +1,4 @@
-name: Build Singularity
+name: Build Car06Diesel
 on:
   push:
   pull_request:
@@ -21,9 +21,9 @@ jobs:
             if (!(Test-Path "libs/$name.dll")) { throw "Missing libs/$name.dll" }
           }
       - name: Compile (warnings are errors)
-        run: dotnet build src/Singularity/Singularity.csproj --configuration Release --warnaserror
+        run: dotnet build src/Car06Diesel/Car06Diesel.csproj --configuration Release --warnaserror
       - uses: actions/upload-artifact@v6
         with:
-          name: Singularity
-          path: src/Singularity/bin/Release/net48/Singularity.dll
+          name: Car06Diesel
+          path: src/Car06Diesel/bin/Release/net48/Car06Diesel.dll
           if-no-files-found: error

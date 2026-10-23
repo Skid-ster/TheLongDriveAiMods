@@ -1,9 +1,11 @@
 # The Long Drive AI Mods
 
-## Car06 Singularity Reactor
+## Car06 1.9 Turbodiesel Conversion
 
-A randomly sized, self-fuelling Car06 petrol reactor with throttle-spooled torque, cyan/magenta emission and layered procedural sound.
+A diesel conversion of the Car06 petrol engine: 850 RPM idle, 4,500 RPM governor, 180 Nm low-end torque, diesel fuel consumption, diesel audio and lower automatic shift thresholds. Normal starting, oil and cooling remain relevant.
 
-[Features, download/install instructions, build guide and testing checklist](src/Singularity/README.md)
+[Download/install instructions, specifications and testing checklist](src/Car06Diesel/README.md)
 
-GitHub Actions builds a warning-strict .NET Framework 4.8 DLL on every push. Download **Singularity** from a successful **Build Singularity** run's artifacts. Game reference DLLs in `libs/` are compile-time dependencies, not part of the downloadable mod.
+**Upgrading from the reactor mod? Remove Singularity.dll first and drain petrol before filling with diesel.**
+
+GitHub Actions builds a warning-strict .NET Framework 4.8 DLL on every push. Download **Car06Diesel** from a successful **Build Car06Diesel** run's artifacts. Reference DLLs in `libs/` are compile-time dependencies, not part of the downloadable mod.
