@@ -169,8 +169,11 @@ namespace Car05EngineVariants
 
             GameObject clone = UnityEngine.Object.Instantiate(donor);
             clone.name = variantName;
-            clone.SetActive(false);
             clone.transform.SetParent(_templateHolder.transform, false);
+
+            // Hide the template through its parent, but keep activeSelf true so
+            // MultiTool's Instantiate call produces an active engine.
+            clone.SetActive(true);
             return clone;
         }
 
