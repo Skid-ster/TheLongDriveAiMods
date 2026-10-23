@@ -46,7 +46,7 @@ jobs:
           path: src/Car05EngineVariants/bin/Release/net48/Car05EngineVariants.dll
 
       - name: Publish GitHub release
-        if: github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: (github.event_name == 'workflow_dispatch' && inputs.publish_release == true) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release]'))
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,8 +61,7 @@ jobs:
             exit 1
           fi
           if [[ -z "$RELEASE_TAG" ]]; then
-            echo "A release tag is required when publishing." >&2
-            exit 1
+            RELEASE_TAG="v1.0.0"
           fi
           CHECKSUM="$(sha256sum "$DLL" | awk '{print $1}')"
           DOWNLOAD_URL="https://github.com/${GH_REPO}/releases/download/${RELEASE_TAG}/Car05EngineVariants.dll"
