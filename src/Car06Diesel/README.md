@@ -12,10 +12,10 @@ Replaces the Car06 **petrol** engine (`gcar06enginebenzin`) with a diesel-inspir
 | Peak torque | 180 Nm at 2,200 RPM |
 | Torque band | 165–180 Nm from 1,700–3,400 RPM |
 | Approximate peak power | 62 kW / 83 hp at 3,800 RPM, before game losses |
-| Automatic shift decision thresholds | 1,400 RPM down / 3,800 RPM up |
+| Automatic clutch engagement band | 900–1,200 RPM |
 | Fuel | Diesel, not petrol or two-stroke mixture |
 
-Torque falls sharply above 4,200 RPM and reaches zero at 4,500 RPM. This is a fuel/torque governor, **not a hard physics RPM clamp**: wheel-driven over-rev is still possible. Manual drivers should shift around 3,500–3,800 RPM. Stock gear ratios and final drive are unchanged. Automatic thresholds are scoped to each shift decision only for cars using the converted engine.
+Torque falls sharply above 4,200 RPM and reaches zero at 4,500 RPM. This is a fuel/torque governor, **not a hard physics RPM clamp**: wheel-driven over-rev is still possible. Manual drivers should shift around 3,500–3,800 RPM. Stock gear ratios and final drive are unchanged. In the supplied game build, automatic gear selection evaluates the engine torque curve rather than the unused car RPM-threshold fields. It therefore sees the new diesel torque band automatically; no fixed shift points are promised.
 
 The game evaluates the torque curve directly in RPM and Nm. Live RPM is never forced. Throttle, clutch, ignition, starting, stalling, fuel mixtures, consumption, oil and cooling remain controlled by the game. The starter is released after the engine catches, rather than forcing the engine to run. A detached engine is kept off.
 
@@ -32,7 +32,7 @@ Vanilla diesel motor/idle/start/stop clips are reused where supplied. Existing m
 
 Fuel is deliberately not converted automatically, and tanks are never refilled or erased. Petrol alone will not run this tune; mixtures follow the game's normal fuel compatibility logic. Already-spawned engines from before registration may stay stock; use a fresh session/engine for testing. No new spawn menu is included.
 
-Requires TLDLoader and Harmony compatible with the supplied `libs/` game assemblies. Install only the mod DLL, never those reference DLLs. Avoid other mods replacing Car06 petrol engines or overriding their engine/shift logic. To uninstall, quit, remove the DLL and restart; the donor returns to petrol behaviour, so change the tank fuel accordingly.
+Requires TLDLoader and Harmony compatible with the supplied `libs/` game assemblies. Install only the mod DLL, never those reference DLLs. Avoid other mods replacing Car06 petrol engines or overriding their engine logic. To uninstall, quit, remove the DLL and restart; the donor returns to petrol behaviour, so change the tank fuel accordingly.
 
 ## Build
 
@@ -51,7 +51,7 @@ Compilation cannot validate driving feel or sound balance. Test in The Long Driv
 - Cold-start with diesel, oil and coolant; idle near 850 RPM and release the starter.
 - Confirm pure petrol and an empty tank do not sustain combustion; ignition-off stops it.
 - Pull through 1,700–3,400 RPM; verify torque tails off near the 4,500 RPM governor.
-- Check automatic up/down shifts and manual clutch operation; swap to a stock engine and check stock shift settings return.
+- Check automatic gear selection and manual clutch operation; verify stock engines remain unaffected.
 - Check deeper diesel idle/load audio without runaway pitch; remove the engine and check silence.
 - Drive long enough to observe fuel/oil consumption and normal temperature behaviour.
 - Save/reload, verify normal size and correct fuel compatibility; confirm other engines remain stock.

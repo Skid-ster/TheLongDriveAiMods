@@ -2,7 +2,7 @@
 
 ## Car06 1.9 Turbodiesel Conversion
 
-A diesel conversion of the Car06 petrol engine: 850 RPM idle, 4,500 RPM governor, 180 Nm low-end torque, diesel fuel consumption, diesel audio and lower automatic shift thresholds. Normal starting, oil and cooling remain relevant.
+A diesel conversion of the Car06 petrol engine: 850 RPM idle, 4,500 RPM governor, 180 Nm low-end torque, diesel fuel consumption, diesel audio and diesel-matched automatic clutch engagement. Normal starting, oil and cooling remain relevant.
 
 [Download/install instructions, specifications and testing checklist](src/Car06Diesel/README.md)
 

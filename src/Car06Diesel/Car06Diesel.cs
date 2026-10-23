@@ -176,35 +176,4 @@ namespace Car06Diesel
             if (__instance.SAlap != null) __instance.SAlap.Stop();
         }
     }
-
-    [HarmonyPatch(typeof(carscript), "AutoShift")]
-    internal static class DieselAutoShiftPatch
-    {
-        internal struct ShiftSettings
-        {
-            internal bool Applied;
-            internal float Min;
-            internal float Max;
-        }
-
-        private static void Prefix(carscript __instance, out ShiftSettings __state)
-        {
-            __state = new ShiftSettings();
-            if (__instance.Engine == null || __instance.Engine.GetComponent<EngineInitializer>() == null) return;
-            __state.Applied = true;
-            __state.Min = __instance.autoShiftMinRpm;
-            __state.Max = __instance.autoShiftMaxRpm;
-            __instance.autoShiftMinRpm = 1400f;
-            __instance.autoShiftMaxRpm = 3800f;
-        }
-
-        private static void Postfix(carscript __instance, ShiftSettings __state)
-        {
-            if (!__state.Applied) return;
-            // Scope the change to this shift decision; swapping engines restores stock behaviour.
-            __instance.autoShiftMinRpm = __state.Min;
-            __instance.autoShiftMaxRpm = __state.Max;
-        }
-    }
-
 }
