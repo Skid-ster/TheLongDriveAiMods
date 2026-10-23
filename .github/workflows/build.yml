@@ -26,7 +26,7 @@ jobs:
         run: dotnet build src/Car05EngineVariants/Car05EngineVariants.csproj -c Release
 
       - name: Upload compiled DLL
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Car05EngineVariants-DLL
           path: src/Car05EngineVariants/bin/Release/net48/Car05EngineVariants.dll
