@@ -536,6 +536,7 @@ namespace Car05EngineVariants
     public sealed class EngineVariantMarker : MonoBehaviour
     {
         public EngineVariantKind Kind = EngineVariantKind.Gas;
+        public bool StatsConfigured;
         internal float NextFluidRefill;
     }
 
@@ -568,8 +569,14 @@ namespace Car05EngineVariants
             if (marker == null)
                 return;
 
-            ConfigureStats(marker.Kind);
-            ConfigureFuel(marker.Kind);
+            // This flag is serialized on the prefab. It prevents a template's Start
+            // from multiplying stats a second time on every spawned copy.
+            if (!marker.StatsConfigured)
+            {
+                ConfigureStats(marker.Kind);
+                ConfigureFuel(marker.Kind);
+                marker.StatsConfigured = true;
+            }
             _configured = true;
 
             if (GetComponent<EngineVisualStyler>() == null)
@@ -735,9 +742,17 @@ namespace Car05EngineVariants
 
             if (_isRacingDiesel)
             {
-                GameObject lightObject = new GameObject("RacingDiesel_Glow");
-                lightObject.transform.SetParent(transform, false);
-                _raceLight = lightObject.AddComponent<Light>();
+                Transform existingLight = transform.Find("RacingDiesel_Glow");
+                if (existingLight != null)
+                    _raceLight = existingLight.GetComponent<Light>();
+
+                if (_raceLight == null)
+                {
+                    GameObject lightObject = new GameObject("RacingDiesel_Glow");
+                    lightObject.transform.SetParent(transform, false);
+                    _raceLight = lightObject.AddComponent<Light>();
+                }
+
                 _raceLight.type = LightType.Point;
                 _raceLight.color = new Color(1.0f, 0.075f, 0.003f, 1.0f);
                 _raceLight.range = 2.5f;
@@ -856,9 +871,18 @@ namespace Car05EngineVariants
 
         private AudioSource CreateLayer(string layerName, AudioClip clip, float volume)
         {
-            GameObject layerObject = new GameObject("05Engine_" + layerName);
-            layerObject.transform.SetParent(transform, false);
-            AudioSource source = layerObject.AddComponent<AudioSource>();
+            string objectName = "05Engine_" + layerName;
+            Transform existingLayer = transform.Find(objectName);
+            AudioSource source = existingLayer == null ? null : existingLayer.GetComponent<AudioSource>();
+
+            if (source == null)
+            {
+                GameObject layerObject = new GameObject(objectName);
+                layerObject.transform.SetParent(transform, false);
+                source = layerObject.AddComponent<AudioSource>();
+            }
+
+            // Reuse layers already present on a cloned template instead of doubling them.
             source.clip = clip;
             source.loop = true;
             source.playOnAwake = false;
