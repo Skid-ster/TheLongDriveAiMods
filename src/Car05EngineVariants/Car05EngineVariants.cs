@@ -162,8 +162,9 @@ namespace Car05EngineVariants
             if (_templateHolder == null)
             {
                 _templateHolder = new GameObject("Car05EngineVariants_Templates");
-                if (mainscript.M != null)
-                    _templateHolder.transform.SetParent(mainscript.M.transform, false);
+                // TLDLoader clears its registry on menu reloads. Keep our source
+                // templates alive so the variants can be registered again.
+                UnityEngine.Object.DontDestroyOnLoad(_templateHolder);
                 _templateHolder.SetActive(false);
             }
 
