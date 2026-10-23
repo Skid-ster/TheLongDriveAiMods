@@ -14,7 +14,7 @@ A stock-looking Lada sleeper for **The Long Drive**, implemented as a TLDLoader 
 
 ## Build and installation
 
-The repository workflow builds the .NET Framework 4.8 assembly on `windows-latest` and publishes `M_LadaRestomod.dll` as the `LadaRestomod` artifact. Download that artifact and place the DLL in the game's TLDLoader mods folder.
+The repository workflow builds the .NET Framework 4.8 assembly on `windows-latest`, places `M_LadaRestomod.dll` in `mods/Lada Restomod/`, and publishes that packaged folder as the `LadaRestomod` artifact. On a successful branch push, the workflow also commits the refreshed DLL to that mod folder. Copy the DLL into the game's TLDLoader mods folder to install it.
 
 The project references the game and loader assemblies from `../../libs`. For local development, keep those libraries in the repository's `libs` directory.
 

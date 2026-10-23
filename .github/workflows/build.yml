@@ -5,6 +5,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -20,9 +23,28 @@ jobs:
       - name: Build mod
         run: dotnet build src/LadaRestomod/LadaRestomod.csproj --configuration Release
 
+      - name: Place DLL in mods folder
+        shell: pwsh
+        run: |
+          $destination = "mods/Lada Restomod"
+          New-Item -ItemType Directory -Force -Path $destination | Out-Null
+          Copy-Item "src/LadaRestomod/bin/Release/net48/M_LadaRestomod.dll" "$destination/M_LadaRestomod.dll" -Force
+
+      - name: Commit built DLL to this branch
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "mods/Lada Restomod/M_LadaRestomod.dll"
+          if ! git diff --cached --quiet; then
+            git commit -m "Update Lada Restomod DLL [skip ci]"
+            git push
+          fi
+
       - name: Upload compiled mod
         uses: actions/upload-artifact@v7
         with:
           name: LadaRestomod
-          path: src/LadaRestomod/bin/Release/net48/M_LadaRestomod.dll
+          path: mods/
           if-no-files-found: error
