@@ -638,7 +638,9 @@ namespace Car05EngineVariants
 
             marker.NextFluidRefill = Time.time + 0.5f;
 
-            tankscript fuelTank = engine.Fuel != null ? engine.Fuel : engine.iFuel;
+            // Vanilla inputs() copies iFuel into Fuel at the start of Update.
+            // Refill that same source tank, including on the first frame.
+            tankscript fuelTank = engine.iFuel != null ? engine.iFuel : engine.Fuel;
             if (fuelTank != null)
                 FillTank(fuelTank, EngineVariantSettings.FuelFor(marker.Kind));
 
@@ -660,6 +662,21 @@ namespace Car05EngineVariants
                 return;
             if (tank.F.fluids == null)
                 tank.F.fluids = new List<mainscript.fluid>();
+
+            bool hasIncompatibleFluid = false;
+            for (int i = 0; i < tank.F.fluids.Count; i++)
+            {
+                if (tank.F.fluids[i].type != fluidType)
+                {
+                    hasIncompatibleFluid = true;
+                    break;
+                }
+            }
+
+            // A diesel variant must not try to burn a full tank of gasoline (and
+            // vice versa). Convert contaminated fuel/oil before the vanilla Update.
+            if (hasIncompatibleFluid)
+                tank.F.fluids.Clear();
 
             float missing = tank.F.maxC - tank.F.GetAmount();
             if (missing > 0.001f)
@@ -826,6 +843,7 @@ namespace Car05EngineVariants
 
         private enginescript _engine;
         private AudioSource _motor;
+        private AudioSource _idleMotor;
         private AudioSource _growl;
         private AudioSource _subBass;
         private AudioSource _heartbeat;
@@ -840,6 +858,7 @@ namespace Car05EngineVariants
                 return;
 
             _motor = EngineFields.ReadMotor(_engine);
+            _idleMotor = _engine.SAlap;
             _pitchMul = EngineVariantSettings.PitchFor(marker.Kind);
             AudioClip[] clips = EngineAudioClipFactory.GetClips(marker.Kind);
 
@@ -861,6 +880,16 @@ namespace Car05EngineVariants
                 _motor.pitch = _pitchMul * (0.85f + rpmRatio * 0.35f);
 
             bool installed = _engine.GetComponentInParent<carscript>() != null;
+            if (!installed)
+            {
+                // The vanilla engine starts these sources again when installed.
+                // Stop playback on the ground without muting or replacing SMotor.
+                if (_motor != null && _motor.isPlaying)
+                    _motor.Stop();
+                if (_idleMotor != null && _idleMotor.isPlaying)
+                    _idleMotor.Stop();
+            }
+
             bool audible = installed && _engine.running && _engine.rpm >= 10.0f;
             float loadGain = 0.55f + rpmRatio * 0.45f;
 

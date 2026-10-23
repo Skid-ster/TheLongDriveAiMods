@@ -6,6 +6,20 @@ on:
       - main
       - arena/a5e4ca89-thelongdriveaimods
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish the DLL as a GitHub release
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: Release tag to create or update when publishing
+        required: false
+        default: v1.0.0
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -30,3 +44,36 @@ jobs:
         with:
           name: Car05EngineVariants-DLL
           path: src/Car05EngineVariants/bin/Release/net48/Car05EngineVariants.dll
+
+      - name: Publish GitHub release
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          DLL="src/Car05EngineVariants/bin/Release/net48/Car05EngineVariants.dll"
+          if [[ ! -f "$DLL" ]]; then
+            echo "Compiled DLL was not found: $DLL" >&2
+            exit 1
+          fi
+          if [[ -z "$RELEASE_TAG" ]]; then
+            echo "A release tag is required when publishing." >&2
+            exit 1
+          fi
+          CHECKSUM="$(sha256sum "$DLL" | awk '{print $1}')"
+          DOWNLOAD_URL="https://github.com/${GH_REPO}/releases/download/${RELEASE_TAG}/Car05EngineVariants.dll"
+          NOTES="$(printf 'Compiled Release build from commit %s.\n\nDirect DLL download: %s\n\nSHA-256: %s' "$RELEASE_SHA" "$DOWNLOAD_URL" "$CHECKSUM")"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$DLL" --clobber
+            gh release edit "$RELEASE_TAG" --notes "$NOTES"
+          else
+            gh release create "$RELEASE_TAG" "$DLL" \
+              --target "$RELEASE_SHA" \
+              --title "Car05EngineVariants ${RELEASE_TAG}" \
+              --notes "$NOTES"
+          fi
+          echo "Published: ${DOWNLOAD_URL}"
